@@ -21,9 +21,45 @@ void setup() {
   //timer2 setup
   TCCR2 = (1 << WGM20) | (1 << WGM21) | (2 << COM20) | 4;
   TIMSK |= (1 << OCIE2);
-  OCR2 = 124;  //124;
+  OCR2 = 124;  
 }
 
-void loop() {
+void loop() {  
+}
+
+ISR(TIMER2_COMP_vect) {
+  uint8_t kbrdState, eventState;
+  kbrdState = BTN_SUM - (PINE & ((1 << BTN_MENU) | (1 << BTN_SELECT) | (1 << BTN_OK)));
   
+  encoderState = PINE & ((1 << ENC_A) | (1 << ENC_B));
+  if ((encoderState == (1 << ENC_A)) and (lastEncoderState == (1 << ENC_B))) {
+    if (!eventMode) {
+      freq -= step;
+      changeFreq = 1;     
+    }  
+  eventState = ENC_EVENT_LEFT;
+  } 
+  else if ((encoderState == (1 << ENC_B)) and (lastEncoderState == (1 << ENC_A))) {
+    if (!eventMode) {
+      freq += step;
+      changeFreq = 1;      
+    }
+    eventState = ENC_EVENT_RIGHT;
+  }
+  if (encoderState) {
+    lastEncoderState = encoderState;
+  }  
+  if (kbrdState) {
+    switch (kbrdState) {
+      case (1 << BTN_MENU):
+        eventState = KBD_EVENT_MENU;
+        break;
+      case (1 << BTN_SELECT):
+        eventState = KBD_EVENT_SELECT;
+        break;
+      case (1 << BTN_OK):
+        eventState = KBD_EVENT_OK;
+        break;
+    }
+  }  
 }
